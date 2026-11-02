@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'sha256-DcyZ1KWKDO7KAdyH1gO6SH9WhcsUJwnUgKjd1re4weE='; base-uri 'none'; form-action 'none'">
+<title>Join with Arc</title>
+<!--
+  REL-25 (R-55 point 3): the page Command's invite QR opens when Arc did not open it first (Arc not installed, or a browser that
+  opened the link itself). The invite is after the # in the address, which a browser never sends to a server. This page sends it
+  nowhere and loads nothing from anywhere: no fonts, images, scripts or requests. It only builds the "Open in Arc" link from it.
+-->
+<style>
+  :root { color-scheme: light dark; --bg: #f6f7f8; --fg: #14181c; --muted: #5a636c; --card: #ffffff; --accent: #0b6bcb; --line: #d7dce1; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0f1215; --fg: #eef1f4; --muted: #a2acb6; --card: #181c20; --accent: #5aa9ff; --line: #2a3138; } }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 17px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 30rem; margin: 0 auto; padding: 2.5rem 1rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .5rem; }
+  p { margin: .5rem 0 1rem; color: var(--muted); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 1.25rem; margin: 1rem 0; }
+  .card h2 { font-size: 1.1rem; margin: 0 0 .25rem; }
+  .card p { margin: 0; }
+  .open { display: block; text-align: center; padding: .9rem 1rem; border-radius: 10px; background: var(--accent); color: #fff; font-weight: 600; text-decoration: none; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Join with Arc</h1>
+
+  <div id="invite" hidden>
+    <p>This is an invite to join a team in Arc.</p>
+    <a id="open" class="open" href="#">Open in Arc</a>
+  </div>
+
+  <div id="none" hidden>
+    <p>This link has no invite in it. Scan the QR on Command's screen again.</p>
+  </div>
+
+  <div class="card">
+    <h2>No Arc on this phone?</h2>
+    <p>Ask whoever runs your Command for the Arc app. Command can offer it to phones on its network. Then scan the QR again.</p>
+  </div>
+</main>
+<script>
+(function () {
+  // The invite is everything after #: the fields Arc reads, never sent to a server. Only the characters Command writes pass.
+  var fields = location.hash.slice(1);
+  var ok = fields.length > 0 && fields.length <= 2048 && /^v=[0-9]{1,6}(&[a-z0-9]{1,16}=[A-Za-z0-9._~%-]*)*$/.test(fields);
+  // Back from the browser's try with no Arc installed (#get-arc): only how to get Arc is shown.
+  if (fields === 'get-arc') return;
+  document.getElementById(ok ? 'invite' : 'none').hidden = false;
+  if (!ok) return;
+  // Arc's own link, forsyte://join?<fields>, as an Android intent link. Without Arc, the browser comes back here (#get-arc).
+  var back = location.origin + location.pathname + '#get-arc';
+  document.getElementById('open').href = 'intent://join?' + fields +
+    '#Intent;scheme=forsyte;package=com.arcindustries.arc;S.browser_fallback_url=' + encodeURIComponent(back) + ';end';
+})();
+</script>
+</body>
+</html>
